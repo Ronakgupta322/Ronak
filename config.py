@@ -17,11 +17,11 @@ BOT_ID = getenv("BOT_ID")
 # -------------------------------------------------------
 OWNER_USERNAME = getenv("OWNER_USERNAME","Ronakguptaji")
 # --------------------------------------------------------
-BOT_USERNAME = getenv("BOT_USERNAME" , "NOBITA_MUSIC_TG_BOT")
+BOT_USERNAME = getenv("BOT_USERNAME" , "RonakMusicClone_bot")
 # --------------------------------------------------------
 BOT_NAME = getenv("BOT_NAME" , "˹ 𝐑ᴏɴᴀᴋ ꭙ 𝐌ᴜ𝐬ɪᴄ 𝐂ʟᴏɴᴇ [2] ˼")
 # ---------------------------------------------------------
-ASSUSERNAME = getenv("ASSUSERNAME" , "NOBITA_MUSIC_TG_BOT")
+ASSUSERNAME = getenv("ASSUSERNAME" , "RonakMusicClone_bot")
 # ---------------------------------------------------------
 
 
@@ -159,7 +159,7 @@ HELP_IMG_URL = getenv(
     "HELP_IMG_URL", "https://i.ibb.co/xPjc7tv/help-menu.jpg"
 )
 
-START_IMG_URL = getenv("START_IMG_URL", "https://files.catbox.moe/q8bej6.jpg")
+START_IMG_URL = getenv("START_IMG_URL", "https://files.catbox.moe/wtqdvd.jpg")
 PING_IMG_URL = getenv("PING_IMG_URL", "https://files.catbox.moe/q8bej6.jpg")
 PLAYLIST_IMG_URL = "https://files.catbox.moe/f2s4ws.jpg"
 STATS_IMG_URL = "https://files.catbox.moe/q8bej6.jpg"
