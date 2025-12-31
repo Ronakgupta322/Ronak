@@ -60,7 +60,7 @@ API_KEY = getenv("API_KEY", 'NxGBNexGenBots254c6b')
 SOURCE = getenv("SOURCE", "https://github.com/TEAMPURVI/SONALI_MUSIC")
 UPSTREAM_REPO = getenv(
     "UPSTREAM_REPO",
-    "https://github.com/iamnobita206243/NOBITA_CLONE_MUSIX",
+    "https://github.com/Ronakgupta322/Ronak",
 )
 UPSTREAM_BRANCH = getenv("UPSTREAM_BRANCH", "main")
 GIT_TOKEN = getenv(
