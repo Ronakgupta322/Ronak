@@ -28,7 +28,7 @@ from config import SUPPORT_CHAT, OWNER_ID
 from datetime import datetime
 CLONES = set()
 
-C_BOT_DESC = "Wᴀɴᴛ ᴀ ʙᴏᴛ ʟɪᴋᴇ ᴛʜɪs? Cʟᴏɴᴇ ɪᴛ ɴᴏᴡ! ✅\n\nVɪsɪᴛ: @NOBITA_MUSIC_TG_BOT ᴛᴏ ɢᴇᴛ sᴛᴀʀᴛᴇᴅ!\n\n - Uᴘᴅᴀᴛᴇ: @NOB1TA_SUPPORT\n - Oᴡɴᴇʀ: @ll_NOBITA_DEFAULTERS_ll"
+C_BOT_DESC = "𝐂ʀᴇᴀᴛᴇ ʏᴏᴜʀ ᴏᴡɴ ᴍᴜ𝐬ɪᴄ ʙᴏᴛ ɪɴ ɪᴜ𝐬ᴛ 𝟷 ᴍɪɴᴜᴛᴇ 💗🦋 @RonakMusicClone_bot"
 
 C_BOT_COMMANDS = [
                 {"command": "/start", "description": "sᴛᴀʀᴛs ᴛʜᴇ ᴍᴜsɪᴄ ʙᴏᴛ"},
@@ -102,8 +102,8 @@ async def clone_txt(client, message, _):
                 "name": bot.first_name,
                 "token": bot_token,
                 "username": bot.username,
-                "channel": "NOB1TA_SUPPORT",
-                "support": "NOB1TA_SUPPORT",
+                "channel": "RonakMUSICbox",
+                "support": "RonakMusicUpdate",
                 "premium" : False,
                 "Date" : False,
             }
