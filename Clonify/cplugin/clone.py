@@ -12,7 +12,7 @@ from .utils import StartTime
 from Clonify.utils import get_readable_time
 from Clonify.utils.decorators.language import language
 
-APP_LINK = f"https://t.me/NOBITA_MUSIC_TG_BOT"
+APP_LINK = f"https://t.me/RonakMusicclone_bot"
 
 
 @Client.on_message(filters.command("clone"))
