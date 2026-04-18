@@ -26,22 +26,42 @@ from Clonify.utils.inline import help_pannel, private_panel, start_panel
 from config import BANNED_USERS, STREAMI_PICS, GREET
 from strings import get_string
 
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ADVANCED STRANGER AESTHETIC CAPTION TEMPLATE
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STRANGER_START_CAPTION = """
+**❅ ʜᴇʟʟᴏ {mention} !**
+
+**ɪ ᴀᴍ {bot_name}** **ᴀɴ ᴀᴅᴠᴀɴᴄᴇᴅ & ᴘᴏᴡᴇʀғᴜʟ ʙᴏᴛ ᴡɪᴛʜ ᴀᴡᴇsᴏᴍᴇ ғᴇᴀᴛᴜʀᴇs.**
+
+**┏━━━━━━━━━━━━━━━━━━━━━⦊**
+**┣ ⚝ ᴜᴘᴛɪᴍᴇ ➠** `{uptime}`
+**┣ ⚝ ᴜsᴇʀs ➠** `{users}`
+**┣ ⚝ ᴄʜᴀᴛs ➠** `{chats}`
+**┣ ⚝ ᴠᴇʀsɪᴏɴ ➠** `v2.5 Pro`
+**┗━━━━━━━━━━━━━━━━━━━━━⦊**
+
+**๏ ᴄʟɪᴄᴋ ᴏɴ ᴛʜᴇ ʜᴇʟᴘ ʙᴜᴛᴛᴏɴ ᴛᴏ ɢᴇᴛ ɪɴғᴏʀᴍᴀᴛɪᴏɴ ᴀʙᴏᴜᴛ ᴍʏ ᴄᴏᴍᴍᴀɴᴅs!**
+"""
 
 @app.on_message(filters.command(["start"]) & filters.private & ~BANNED_USERS)
 @LanguageStart
 async def start_pm(client, message: Message, _):
-
-    loading_1 = await message.reply_text(random.choice(GREET))
+    # Pro-Level System Boot Animation
+    loading_1 = await message.reply_text("<b>« ɪɴɪᴛɪᴀʟɪᴢɪɴɢ sʏsᴛᴇᴍ... »</b>")
     await add_served_user(message.from_user.id)
     
-    await loading_1.edit_text("<b>ʟᴏᴀᴅɪɴɢ</b>")
-    await asyncio.sleep(0.1)
-    await loading_1.edit_text("<b>ʟᴏᴀᴅɪɴɢ.</b>")
-    await asyncio.sleep(0.1)
-    await loading_1.edit_text("<b>ʟᴏᴀᴅɪɴɢ..</b>")
-    await asyncio.sleep(0.1)
-    await loading_1.edit_text("<b>ʟᴏᴀᴅɪɴɢ...</b>")
-    await asyncio.sleep(0.1)
+    animations = [
+        "<b>« ʙᴏᴏᴛɪɴɢ ᴜᴘ ᴅᴀᴛᴀʙᴀsᴇ... »</b>",
+        "<b>« ᴠᴇʀɪғʏɪɴɢ ᴍᴏᴅᴜʟᴇs... »</b>",
+        "<b>« sᴛᴀʀᴛɪɴɢ sᴇʀᴠɪᴄᴇs... »</b>",
+        "<b>« ʀᴇᴀᴅʏ ᴛᴏ ɢᴏ ! »</b>"
+    ]
+    
+    for frame in animations:
+        await loading_1.edit_text(frame)
+        await asyncio.sleep(0.3)
+        
     await loading_1.delete()
 
     if len(message.text.split()) > 1:
@@ -62,7 +82,7 @@ async def start_pm(client, message: Message, _):
                 )
             return
         if name[0:3] == "inf":
-            m = await message.reply_text("🔎")
+            m = await message.reply_text("🔎 <b>ғᴇᴛᴄʜɪɴɢ ᴛʀᴀᴄᴋ ɪɴғᴏ...</b>")
             query = (str(name)).replace("info_", "", 1)
             query = f"https://www.youtube.com/watch?v={query}"
             results = VideosSearch(query, limit=1)
@@ -99,10 +119,23 @@ async def start_pm(client, message: Message, _):
                     text=f"✦ {message.from_user.mention} ᴊᴜsᴛ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ ᴛᴏ ᴄʜᴇᴄᴋ <b>ᴛʀᴀᴄᴋ ɪɴғᴏʀᴍᴀᴛɪᴏɴ</b>.\n\n✦ <b>ᴜsᴇʀ ɪᴅ ➠</b> <code>{message.from_user.id}</code>\n✦ <b>ᴜsᴇʀɴᴀᴍᴇ ➠</b> @{message.from_user.username}",
                 )
     else:
+        # Stranger Repo Stats Fetching & Formatting
         out = private_panel(_)
+        uptime = int(time.time() - _boot_)
+        users = len(await get_served_users())
+        chats = len(await get_served_chats())
+        
+        caption = STRANGER_START_CAPTION.format(
+            mention=message.from_user.mention,
+            bot_name=app.mention,
+            uptime=get_readable_time(uptime),
+            users=users,
+            chats=chats
+        )
+        
         await message.reply_photo(
             random.choice(STREAMI_PICS),
-            caption=_["start_2"].format(message.from_user.mention, app.mention),
+            caption=caption,
             reply_markup=InlineKeyboardMarkup(out),
         )
         if await is_on_off(2):
@@ -119,7 +152,7 @@ async def start_gp(client, message: Message, _):
     uptime = int(time.time() - _boot_)
     await message.reply_photo(
         random.choice(STREAMI_PICS),
-        caption=_["start_1"].format(app.mention, get_readable_time(uptime)),
+        caption=f"**❅ ᴀʟɪᴠᴇ & ᴡᴏʀᴋɪɴɢ ᴘᴇʀғᴇᴄᴛʟʏ !**\n\n**⚝ ᴜᴘᴛɪᴍᴇ ➠** `{get_readable_time(uptime)}`\n**⚝ ʙᴏᴛ ➠** {app.mention}",
         reply_markup=InlineKeyboardMarkup(out),
     )
     return await add_served_chat(message.chat.id)
@@ -138,7 +171,7 @@ async def welcome(client, message: Message):
                     pass
             if member.id == app.id:
                 if message.chat.type != ChatType.SUPERGROUP:
-                    await message.reply_text(_["start_4"])
+                    await message.reply_text("**[!] ᴇʀʀᴏʀ:** `ɪ ᴏɴʟʏ ᴡᴏʀᴋ ɪɴ sᴜᴘᴇʀɢʀᴏᴜᴘs !`")
                     return await app.leave_chat(message.chat.id)
                 if message.chat.id in await blacklisted_chats():
                     await message.reply_text(
@@ -153,12 +186,7 @@ async def welcome(client, message: Message):
 
                 out = start_panel(_)
                 await message.reply_text(
-                    text=_["start_3"].format(
-                        message.from_user.mention,
-                        app.mention,
-                        message.chat.title,
-                        app.mention,
-                    ),
+                    text=f"**❅ ᴛʜᴀɴᴋs ғᴏʀ ᴀᴅᴅɪɴɢ ᴍᴇ ɪɴ {message.chat.title} !**\n\n**⚝ ᴘʀᴏᴍᴏᴛᴇ ᴍᴇ ᴀs ᴀᴅᴍɪɴ ᴛᴏ ғᴜɴᴄᴛɪᴏɴ ᴘʀᴏᴘᴇʀʟʏ.**",
                     reply_markup=InlineKeyboardMarkup(out),
                 )
                 await add_served_chat(message.chat.id)
