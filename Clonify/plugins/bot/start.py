@@ -3,14 +3,11 @@ import random
 from pyrogram import filters
 from pyrogram.enums import ChatType
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
-from youtubesearchpython.__future__ import VideosSearch
 
 import config
 from Clonify import app
 from Clonify.misc import _boot_
 from Clonify.plugins.sudo.sudoers import sudoers_list
-from Clonify.utils.database import get_served_chats, get_served_users, get_sudoers
-from Clonify.utils import bot_sys_stats
 from Clonify.utils.database import (
     add_served_chat,
     add_served_user,
@@ -22,22 +19,23 @@ from Clonify.utils.database import (
 from Clonify.utils.decorators.language import LanguageStart
 from Clonify.utils.formatters import get_readable_time
 from Clonify.utils.inline import help_pannel, private_panel, start_panel
-from config import BANNED_USERS, START_IMG_URL
+from config import BANNED_USERS, STREAMI_PICS
 from strings import get_string
 
 
-async def safe_send_start(message: Message, caption: str, reply_markup):
+# 🔹 Safe send function (image fail → text fallback)
+async def send_start(message, caption, keyboard):
     try:
         return await message.reply_photo(
-            photo=START_IMG_URL,
+            photo=random.choice(STREAMI_PICS),
             caption=caption,
-            reply_markup=reply_markup,
+            reply_markup=keyboard,
         )
     except Exception as e:
-        print(f"START_PHOTO_SEND_FAILED: {e}")
+        print(f"PHOTO ERROR: {e}")
         return await message.reply_text(
             text=caption,
-            reply_markup=reply_markup,
+            reply_markup=keyboard,
             disable_web_page_preview=True,
         )
 
@@ -46,146 +44,77 @@ async def safe_send_start(message: Message, caption: str, reply_markup):
 @LanguageStart
 async def start_pm(client, message: Message, _):
     try:
-        loading = await message.reply_text("LOADING.")
+        # 🔹 simple loading (NO animation = no lag)
+        loading = await message.reply_text("⚡ Starting...")
+
         await add_served_user(message.from_user.id)
 
+        # 🔹 deep link check
         if len(message.text.split()) > 1:
             name = message.text.split(None, 1)[1]
 
-            if name[0:4] == "help":
-                keyboard = help_pannel(_)
+            if name.startswith("help"):
                 await loading.delete()
-                return await safe_send_start(
+                keyboard = help_pannel(_)
+                return await send_start(
                     message,
                     _["help_1"].format(config.SUPPORT_CHAT),
                     keyboard,
                 )
 
-            if name[0:3] == "sud":
+            if name.startswith("sud"):
                 await loading.delete()
                 await sudoers_list(client=client, message=message, _=_)
-                if await is_on_off(2):
-                    return await app.send_message(
-                        chat_id=config.LOGGER_ID,
-                        text=(
-                            f"✦ {message.from_user.mention} ᴊᴜsᴛ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ ᴛᴏ ᴄʜᴇᴄᴋ sᴜᴅᴏʟɪsᴛ.\n\n"
-                            f"✦ ᴜsᴇʀ ɪᴅ ➠ `{message.from_user.id}`\n"
-                            f"✦ ᴜsᴇʀɴᴀᴍᴇ ➠ @{message.from_user.username}"
-                        ),
-                    )
                 return
 
-            if name[0:3] == "inf":
-                query = str(name).replace("info_", "", 1)
-                query = f"https://www.youtube.com/watch?v={query}"
-                results = VideosSearch(query, limit=1)
-                result_data = await results.next()
-
-                for result in result_data["result"]:
-                    title = result.get("title", "Unknown")
-                    duration = result.get("duration", "Unknown")
-                    views = result.get("viewCount", {}).get("short", "Unknown")
-                    thumbnail = result.get("thumbnails", [{}])[0].get("url", START_IMG_URL)
-                    thumbnail = thumbnail.split("?")[0]
-                    channellink = result.get("channel", {}).get("link", config.SUPPORT_CHAT)
-                    channel = result.get("channel", {}).get("name", "Unknown")
-                    link = result.get("link", config.SUPPORT_CHAT)
-                    published = result.get("publishedTime", "Unknown")
-
-                    searched_text = _["start_6"].format(
-                        title,
-                        duration,
-                        views,
-                        published,
-                        channellink,
-                        channel,
-                        app.mention,
-                    )
-
-                    key = InlineKeyboardMarkup(
-                        [
-                            [
-                                InlineKeyboardButton(text=_["S_B_8"], url=link),
-                                InlineKeyboardButton(text=_["S_B_9"], url=config.SUPPORT_CHAT),
-                            ]
-                        ]
-                    )
-
-                    await loading.delete()
-                    try:
-                        await app.send_photo(
-                            chat_id=message.chat.id,
-                            photo=thumbnail,
-                            caption=searched_text,
-                            reply_markup=key,
-                        )
-                    except Exception as e:
-                        print(f"INFO_PHOTO_SEND_FAILED: {e}")
-                        await message.reply_text(
-                            searched_text,
-                            reply_markup=key,
-                            disable_web_page_preview=True,
-                        )
-
-                    if await is_on_off(2):
-                        return await app.send_message(
-                            chat_id=config.LOGGER_ID,
-                            text=(
-                                f"✦ {message.from_user.mention} ᴊᴜsᴛ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ ᴛᴏ ᴄʜᴇᴄᴋ ᴛʀᴀᴄᴋ ɪɴғᴏʀᴍᴀᴛɪᴏɴ.\n\n"
-                                f"✦ ᴜsᴇʀ ɪᴅ ➠ `{message.from_user.id}`\n"
-                                f"✦ ᴜsᴇʀɴᴀᴍᴇ ➠ @{message.from_user.username}"
-                            ),
-                        )
-                    return
-
-        out = private_panel(_)
+        # 🔹 main start panel
         await loading.delete()
-        await safe_send_start(
+        keyboard = InlineKeyboardMarkup(private_panel(_))
+
+        await send_start(
             message,
             _["start_2"].format(message.from_user.mention, app.mention),
-            InlineKeyboardMarkup(out),
+            keyboard,
         )
 
+        # 🔹 logging
         if await is_on_off(2):
-            return await app.send_message(
+            await app.send_message(
                 chat_id=config.LOGGER_ID,
-                text=(
-                    f"✦ {message.from_user.mention} ᴊᴜsᴛ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ.\n\n"
-                    f"✦ ᴜsᴇʀ ɪᴅ ➠ `{message.from_user.id}`\n"
-                    f"✦ ᴜsᴇʀɴᴀᴍᴇ ➠ @{message.from_user.username}"
-                ),
+                text=f"User started bot ➜ {message.from_user.mention}",
             )
 
     except Exception as e:
-        print(f"START_PM_ERROR: {e}")
+        print(f"START ERROR: {e}")
         try:
-            await message.reply_text("Start panel load nahi ho paaya. Dobara /start bhejo.")
-        except Exception as inner:
-            print(f"START_PM_FALLBACK_ERROR: {inner}")
+            await message.reply_text("❌ Start load failed, try again.")
+        except:
+            pass
 
 
 @app.on_message(filters.command(["start"]) & filters.group & ~BANNED_USERS)
 @LanguageStart
 async def start_gp(client, message: Message, _):
     try:
-        out = start_panel(_)
         uptime = int(time.time() - _boot_)
+        keyboard = InlineKeyboardMarkup(start_panel(_))
+
         try:
             await message.reply_photo(
-                START_IMG_URL,
+                random.choice(STREAMI_PICS),
                 caption=_["start_1"].format(app.mention, get_readable_time(uptime)),
-                reply_markup=InlineKeyboardMarkup(out),
+                reply_markup=keyboard,
             )
-        except Exception as e:
-            print(f"GROUP_START_PHOTO_FAILED: {e}")
+        except:
             await message.reply_text(
                 _["start_1"].format(app.mention, get_readable_time(uptime)),
-                reply_markup=InlineKeyboardMarkup(out),
-                disable_web_page_preview=True,
+                reply_markup=keyboard,
             )
-        return await add_served_chat(message.chat.id)
+
+        await add_served_chat(message.chat.id)
+
     except Exception as e:
-        print(f"START_GP_ERROR: {e}")
+        print(f"GROUP START ERROR: {e}")
 
 
 @app.on_message(filters.new_chat_members, group=-1)
@@ -198,7 +127,7 @@ async def welcome(client, message: Message):
             if await is_banned_user(member.id):
                 try:
                     await message.chat.ban_member(member.id)
-                except Exception:
+                except:
                     pass
 
             if member.id == app.id:
@@ -213,11 +142,11 @@ async def welcome(client, message: Message):
                             f"https://t.me/{app.username}?start=sudolist",
                             config.SUPPORT_CHAT,
                         ),
-                        disable_web_page_preview=True,
                     )
                     return await app.leave_chat(message.chat.id)
 
-                out = start_panel(_)
+                keyboard = InlineKeyboardMarkup(start_panel(_))
+
                 await message.reply_text(
                     text=_["start_3"].format(
                         message.from_user.mention,
@@ -225,10 +154,10 @@ async def welcome(client, message: Message):
                         message.chat.title,
                         app.mention,
                     ),
-                    reply_markup=InlineKeyboardMarkup(out),
+                    reply_markup=keyboard,
                 )
-                await add_served_chat(message.chat.id)
-                await message.stop_propagation()
 
-        except Exception as ex:
-            print(f"WELCOME_ERROR: {ex}")
+                await add_served_chat(message.chat.id)
+
+        except Exception as e:
+            print(f"WELCOME ERROR: {e}")
