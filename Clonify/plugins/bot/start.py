@@ -1,21 +1,22 @@
 # -----------------------------------------------
-# 🔸 StrangerMusic Project
-# 🔹 Developed & Maintained by: Shashank Shukla
+# 🔸 Clonify Project
+# 🔹 Start Module - Fixed & Stable Version
 # -----------------------------------------------
 
 import random
 import time
+
 from pyrogram import filters
 from pyrogram.enums import ChatType
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
-from py_yt import VideosSearch
+from youtubesearchpython.__future__ import VideosSearch
 
 import config
-from SHUKLAMUSIC import app
-from SHUKLAMUSIC.misc import boot
-from SHUKLAMUSIC.plugins.sudo.sudoers import sudoers_list
-from SHUKLAMUSIC.utils import bot_sys_stats
-from SHUKLAMUSIC.utils.database import (
+from Clonify import app
+from Clonify.misc import boot
+from Clonify.plugins.sudo.sudoers import sudoers_list
+from Clonify.utils import bot_sys_stats
+from Clonify.utils.database import (
     add_served_chat,
     add_served_user,
     blacklisted_chats,
@@ -25,11 +26,11 @@ from SHUKLAMUSIC.utils.database import (
     is_banned_user,
     is_on_off,
 )
-from SHUKLAMUSIC.utils.decorators.language import LanguageStart
-from SHUKLAMUSIC.utils.formatters import get_readable_time
-from SHUKLAMUSIC.utils.inline import help_pannel, private_panel, start_panel
+from Clonify.utils.decorators.language import LanguageStart
+from Clonify.utils.formatters import get_readable_time
+from Clonify.utils.inline import help_pannel, private_panel, start_panel
+from config import BANNED_USERS, STREAMI_PICS
 from strings import get_string
-from config import BANNED_USERS, SHASHANK_IMG
 
 
 EFFECT_IDS = [
@@ -40,20 +41,25 @@ EFFECT_IDS = [
 ]
 
 
-# 🔹 SAFE SENDER (image fail → text fallback)
-async def send_safe(msg: Message, photo, caption, markup, effect_id=None):
+async def send_safe(
+    message: Message,
+    photo: str,
+    caption: str,
+    reply_markup=None,
+    effect_id=None,
+):
     try:
-        return await msg.reply_photo(
-            photo,
+        return await message.reply_photo(
+            photo=photo,
             caption=caption,
-            reply_markup=markup,
+            reply_markup=reply_markup,
             message_effect_id=effect_id,
         )
     except Exception as e:
-        print(f"[PHOTO ERROR] {e}")
-        return await msg.reply_text(
-            caption,
-            reply_markup=markup,
+        print(f"[START PHOTO ERROR] {e}")
+        return await message.reply_text(
+            text=caption,
+            reply_markup=reply_markup,
             disable_web_page_preview=True,
         )
 
@@ -67,112 +73,154 @@ async def start_pm(client, message: Message, _):
         bot_mention = client.me.mention
         bot_username = client.me.username
 
-        # 🔹 language safe
         if not _:
             _ = {}
 
-        # 🔹 deep link handling
         if len(message.text.split()) > 1:
             name = message.text.split(None, 1)[1]
 
             if name.startswith("help"):
                 keyboard = help_pannel(_)
-                text = _.get("help_1", "Help Panel").format(config.SUPPORT_CHAT)
+                text = _.get("help_1", "Help panel").format(config.SUPPORT_CHAT)
                 return await send_safe(
-                    message,
-                    random.choice(SHASHANK_IMG),
-                    text,
-                    keyboard,
-                    random.choice(EFFECT_IDS),
+                    message=message,
+                    photo=random.choice(STREAMI_PICS),
+                    caption=text,
+                    reply_markup=keyboard,
+                    effect_id=random.choice(EFFECT_IDS),
                 )
 
-            elif name.startswith("sud"):
+            if name.startswith("sud"):
                 await sudoers_list(client=client, message=message, _=_)
+                if await is_on_off(2):
+                    await client.send_message(
+                        chat_id=config.LOGGER_ID,
+                        text=(
+                            f"✦ {message.from_user.mention} ᴊᴜsᴛ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ "
+                            f"ᴛᴏ ᴄʜᴇᴄᴋ <b>sᴜᴅᴏʟɪsᴛ</b>.\n\n"
+                            f"<b>✦ ᴜsᴇʀ ɪᴅ ➠</b> <code>{message.from_user.id}</code>\n"
+                            f"<b>✦ ᴜsᴇʀɴᴀᴍᴇ ➠</b> @{message.from_user.username}"
+                        ),
+                    )
                 return
 
-            elif name.startswith("inf"):
+            if name.startswith("inf"):
                 query = name.replace("info_", "", 1)
                 results = VideosSearch(query, limit=1)
+                result_data = await results.next()
 
-                for result in (await results.next())["result"]:
+                title = "Unknown"
+                duration = "Unknown"
+                views = "Unknown"
+                thumbnail = random.choice(STREAMI_PICS)
+                channellink = config.SUPPORT_CHAT
+                channel = "Unknown"
+                link = config.SUPPORT_CHAT
+                published = "Unknown"
+
+                for result in result_data.get("result", []):
                     title = result.get("title", "Unknown")
                     duration = result.get("duration", "Unknown")
                     views = result.get("viewCount", {}).get("short", "Unknown")
-                    thumbnail = result.get("thumbnails", [{}])[0].get("url", "")
+                    thumbnail = result.get("thumbnails", [{}])[0].get("url", thumbnail)
                     thumbnail = thumbnail.split("?")[0]
-                    channellink = result.get("channel", {}).get("link", "")
+                    channellink = result.get("channel", {}).get("link", config.SUPPORT_CHAT)
                     channel = result.get("channel", {}).get("name", "Unknown")
-                    link = result.get("link", "")
+                    link = result.get("link", config.SUPPORT_CHAT)
                     published = result.get("publishedTime", "Unknown")
+                    break
 
-                text = _.get("start_6", "Track Info").format(
-                    title, duration, views, published, channellink, channel, bot_mention
+                searched_text = _.get("start_6", "Track Info").format(
+                    title,
+                    duration,
+                    views,
+                    published,
+                    channellink,
+                    channel,
+                    bot_mention,
                 )
 
                 key = InlineKeyboardMarkup(
                     [
                         [
-                            InlineKeyboardButton("🎧 Listen", url=link),
-                            InlineKeyboardButton("💬 Support", url=config.SUPPORT_CHAT),
-                        ]
+                            InlineKeyboardButton(
+                                text=_.get("S_B_8", "🎧 Listen"),
+                                url=link,
+                            ),
+                            InlineKeyboardButton(
+                                text=_.get("S_B_9", "💬 Support"),
+                                url=config.SUPPORT_CHAT,
+                            ),
+                        ],
                     ]
                 )
 
-                return await send_safe(
-                    message,
-                    thumbnail,
-                    text,
-                    key,
-                    random.choice(EFFECT_IDS),
+                await send_safe(
+                    message=message,
+                    photo=thumbnail,
+                    caption=searched_text,
+                    reply_markup=key,
+                    effect_id=random.choice(EFFECT_IDS),
                 )
 
-        # 🔹 MAIN START PANEL
+                if await is_on_off(2):
+                    await client.send_message(
+                        chat_id=config.LOGGER_ID,
+                        text=(
+                            f"✦ {message.from_user.mention} ᴊᴜsᴛ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ "
+                            f"ᴛᴏ ᴄʜᴇᴄᴋ <b>ᴛʀᴀᴄᴋ ɪɴғᴏʀᴍᴀᴛɪᴏɴ</b>.\n\n"
+                            f"<b>✦ ᴜsᴇʀ ɪᴅ ➠</b> <code>{message.from_user.id}</code>\n"
+                            f"<b>✦ ᴜsᴇʀɴᴀᴍᴇ ➠</b> @{message.from_user.username}"
+                        ),
+                    )
+                return
+
         out = private_panel(_)
         served_chats = len(await get_served_chats())
         served_users = len(await get_served_users())
-        UP, CPU, RAM, DISK = await bot_sys_stats()
+        up, cpu, ram, disk = await bot_sys_stats()
 
-        # 🔹 language safe text
         try:
-            text = _["start_2"].format(
+            caption = _["start_2"].format(
                 message.from_user.mention,
                 bot_mention,
-                UP,
-                DISK,
-                CPU,
-                RAM,
+                up,
+                disk,
+                cpu,
+                ram,
                 served_users,
                 served_chats,
             )
         except Exception as e:
-            print(f"[LANG ERROR] {e}")
-            text = f"""
-👋 Hello {message.from_user.mention}
-
-🎵 Welcome to {bot_mention}
-
-⚡ Fast • Smooth • No Lag
-
-👥 Users: {served_users}
-💬 Chats: {served_chats}
-"""
+            print(f"[START_2 FORMAT ERROR] {e}")
+            caption = (
+                f"👋 Hello {message.from_user.mention}\n\n"
+                f"🎵 Welcome to {bot_mention}\n\n"
+                f"⚡ Fast • Smooth • Stable\n"
+                f"👥 Users: {served_users}\n"
+                f"💬 Chats: {served_chats}\n"
+            )
 
         await send_safe(
-            message,
-            random.choice(SHASHANK_IMG),
-            text,
-            InlineKeyboardMarkup(out),
-            random.choice(EFFECT_IDS),
+            message=message,
+            photo=random.choice(STREAMI_PICS),
+            caption=caption,
+            reply_markup=InlineKeyboardMarkup(out),
+            effect_id=random.choice(EFFECT_IDS),
         )
 
         if await is_on_off(2):
             await client.send_message(
                 chat_id=config.LOGGER_ID,
-                text=f"User started bot ➜ {message.from_user.mention}",
+                text=(
+                    f"✦ {message.from_user.mention} ᴊᴜsᴛ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ.\n\n"
+                    f"✦ <b>ᴜsᴇʀ ɪᴅ ➠</b> <code>{message.from_user.id}</code>\n"
+                    f"✦ <b>ᴜsᴇʀɴᴀᴍᴇ ➠</b> @{message.from_user.username}"
+                ),
             )
 
     except Exception as e:
-        print(f"[START ERROR] {e}")
+        print(f"[PRIVATE START ERROR] {e}")
         await message.reply_text("❌ Start load failed, try again.")
 
 
@@ -180,23 +228,30 @@ async def start_pm(client, message: Message, _):
 @LanguageStart
 async def start_gp(client, message: Message, _):
     try:
+        if not _:
+            _ = {}
+
+        out = start_panel(_)
         uptime = int(time.time() - boot)
         bot_mention = client.me.mention
-        out = start_panel(_)
 
-        text = _.get("start_1", "Bot is Alive").format(
-            bot_mention, get_readable_time(uptime)
-        )
+        try:
+            caption = _["start_1"].format(bot_mention, get_readable_time(uptime))
+        except Exception as e:
+            print(f"[START_1 FORMAT ERROR] {e}")
+            caption = (
+                f"🎵 {bot_mention} is alive.\n\n"
+                f"⏱ Uptime: {get_readable_time(uptime)}"
+            )
 
         await send_safe(
-            message,
-            random.choice(SHASHANK_IMG),
-            text,
-            InlineKeyboardMarkup(out),
-            random.choice(EFFECT_IDS),
+            message=message,
+            photo=random.choice(STREAMI_PICS),
+            caption=caption,
+            reply_markup=InlineKeyboardMarkup(out),
+            effect_id=random.choice(EFFECT_IDS),
         )
-
-        await add_served_chat(message.chat.id)
+        return await add_served_chat(message.chat.id)
 
     except Exception as e:
         print(f"[GROUP START ERROR] {e}")
@@ -216,17 +271,17 @@ async def welcome(client, message: Message):
             if await is_banned_user(member.id):
                 try:
                     await message.chat.ban_member(member.id)
-                except:
+                except Exception:
                     pass
 
             if member.id == bot_id:
                 if message.chat.type != ChatType.SUPERGROUP:
-                    await message.reply_text(_.get("start_4", "Use in supergroup"))
+                    await message.reply_text(_.get("start_4", "Use me in supergroup only."))
                     return await client.leave_chat(message.chat.id)
 
                 if message.chat.id in await blacklisted_chats():
                     await message.reply_text(
-                        _.get("start_5", "Blacklisted").format(
+                        _.get("start_5", "{}\n{}\n{}").format(
                             bot_mention,
                             f"https://t.me/{bot_username}?start=sudolist",
                             config.SUPPORT_CHAT,
@@ -237,22 +292,30 @@ async def welcome(client, message: Message):
 
                 out = start_panel(_)
 
-                text = _.get("start_3", "Bot added").format(
-                    message.from_user.mention,
-                    bot_mention,
-                    message.chat.title,
-                    bot_mention,
-                )
+                try:
+                    caption = _["start_3"].format(
+                        message.from_user.mention,
+                        bot_mention,
+                        message.chat.title,
+                        bot_mention,
+                    )
+                except Exception as e:
+                    print(f"[START_3 FORMAT ERROR] {e}")
+                    caption = (
+                        f"👋 Thanks {message.from_user.mention}\n\n"
+                        f"{bot_mention} added successfully in {message.chat.title}"
+                    )
 
                 await send_safe(
-                    message,
-                    random.choice(SHASHANK_IMG),
-                    text,
-                    InlineKeyboardMarkup(out),
-                    random.choice(EFFECT_IDS),
+                    message=message,
+                    photo=random.choice(STREAMI_PICS),
+                    caption=caption,
+                    reply_markup=InlineKeyboardMarkup(out),
+                    effect_id=random.choice(EFFECT_IDS),
                 )
 
                 await add_served_chat(message.chat.id)
+                await message.stop_propagation()
 
-        except Exception as e:
-            print(f"[WELCOME ERROR] {e}")
+        except Exception as ex:
+            print(f"[WELCOME ERROR] {ex}")
