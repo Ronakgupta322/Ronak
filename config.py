@@ -56,7 +56,7 @@ YTPROXY_URL = getenv("YTPROXY_URL", 'https://tgapi.xbitcode.com') ##
 YT_API_KEY = getenv("YT_API_KEY" , 'xbit_B4TNnBAoe6uoSM7NL')
 # ----------------------------------------------------------------
 # ----------------------------------------------------------------
-SOURCE = getenv("SOURCE", "https://github.com/TEAMPURVI/SONALI_MUSIC")
+SOURCE = getenv("SOURCE", "https://github.com/Ronakgupta322/Ronak")
 UPSTREAM_REPO = getenv(
     "UPSTREAM_REPO",
     "https://github.com/Ronakgupta322/Ronak",
