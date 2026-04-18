@@ -1,9 +1,11 @@
 import time
 import random
 import asyncio
+import traceback
 from pyrogram import filters
 from pyrogram.enums import ChatType
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
+from pyrogram.errors import PhotoInvalidDimensions, WebpageCurlFailed, MediaEmpty, RPCError
 from youtubesearchpython.__future__ import VideosSearch
 
 import config
@@ -54,17 +56,15 @@ async def start_pm(client, message: Message, _):
     animations = [
         "<b>« ʙᴏᴏᴛɪɴɢ ᴜᴘ ᴅᴀᴛᴀʙᴀsᴇ... »</b>",
         "<b>« ᴠᴇʀɪғʏɪɴɢ ᴍᴏᴅᴜʟᴇs... »</b>",
-        "<b>« sᴛᴀʀᴛɪɴɢ sᴇʀᴠɪᴄᴇs... »</b>",
-        "<b>« ʀᴇᴀᴅʏ ᴛᴏ ɢᴏ ! »</b>"
+        "<b>« sᴛᴀʀᴛɪɴɢ sᴇʀᴠɪᴄᴇs... »</b>"
     ]
     
     for frame in animations:
         await loading_1.edit_text(frame)
         await asyncio.sleep(0.3)
-        
-    await loading_1.delete()
 
     if len(message.text.split()) > 1:
+        await loading_1.delete()
         name = message.text.split(None, 1)[1]
         if name[0:4] == "help":
             keyboard = help_pannel(_)
@@ -78,7 +78,7 @@ async def start_pm(client, message: Message, _):
             if await is_on_off(2):
                 return await app.send_message(
                     chat_id=config.LOGGER_ID,
-                    text=f"✦ {message.from_user.mention} ᴊᴜsᴛ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ ᴛᴏ ᴄʜᴇᴄᴋ <b>sᴜᴅᴏʟɪsᴛ</b>.\n\n<b>✦ ᴜsᴇʀ ɪᴅ ➠</b> <code>{message.from_user.id}</code>\n<b>✦ ᴜsᴇʀɴᴀᴍᴇ ➠</b> @{message.from_user.username}",
+                    text=f"✦ {message.from_user.mention} ᴊᴜsᴛ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ ᴛᴏ ᴄʜᴇᴄᴋ <b>sᴜᴅᴏʟɪsᴛ</b>.\n\n<b>✦ ᴜsᴇʀ ɪᴅ ➠</b> <code>{message.from_user.id}</code>",
                 )
             return
         if name[0:3] == "inf":
@@ -113,36 +113,64 @@ async def start_pm(client, message: Message, _):
                 caption=searched_text,
                 reply_markup=key,
             )
-            if await is_on_off(2):
-                return await app.send_message(
-                    chat_id=config.LOGGER_ID,
-                    text=f"✦ {message.from_user.mention} ᴊᴜsᴛ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ ᴛᴏ ᴄʜᴇᴄᴋ <b>ᴛʀᴀᴄᴋ ɪɴғᴏʀᴍᴀᴛɪᴏɴ</b>.\n\n✦ <b>ᴜsᴇʀ ɪᴅ ➠</b> <code>{message.from_user.id}</code>\n✦ <b>ᴜsᴇʀɴᴀᴍᴇ ➠</b> @{message.from_user.username}",
-                )
+            return
     else:
-        # Stranger Repo Stats Fetching & Formatting
-        out = private_panel(_)
-        uptime = int(time.time() - _boot_)
-        users = len(await get_served_users())
-        chats = len(await get_served_chats())
-        
-        caption = STRANGER_START_CAPTION.format(
-            mention=message.from_user.mention,
-            bot_name=app.mention,
-            uptime=get_readable_time(uptime),
-            users=users,
-            chats=chats
-        )
-        
-        await message.reply_photo(
-            random.choice(STREAMI_PICS),
-            caption=caption,
-            reply_markup=InlineKeyboardMarkup(out),
-        )
-        if await is_on_off(2):
-            return await app.send_message(
-                chat_id=config.LOGGER_ID,
-                text=f"✦ {message.from_user.mention} ᴊᴜsᴛ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ.\n\n✦ <b>ᴜsᴇʀ ɪᴅ ➠</b> <code>{message.from_user.id}</code>\n✦ <b>ᴜsᴇʀɴᴀᴍᴇ ➠</b> @{message.from_user.username}",
+        try:
+            # Stranger Repo Stats Fetching
+            uptime = int(time.time() - _boot_)
+            users = len(await get_served_users())
+            chats = len(await get_served_chats())
+            
+            # Formating the Caption
+            caption = STRANGER_START_CAPTION.format(
+                mention=message.from_user.mention,
+                bot_name=app.mention,
+                uptime=get_readable_time(uptime),
+                users=users,
+                chats=chats
             )
+            
+            # Checking and setting Keyboard
+            out = private_panel(_)
+            markup = out if isinstance(out, InlineKeyboardMarkup) else InlineKeyboardMarkup(out)
+            
+            # Deleting loading message before sending final message
+            await loading_1.delete()
+
+            # SAFE IMAGE SENDER: Agar image link kharab hogi toh sirf text aayega, bot crash nahi hoga.
+            try:
+                await message.reply_photo(
+                    photo=random.choice(STREAMI_PICS),
+                    caption=caption,
+                    reply_markup=markup,
+                )
+            except (PhotoInvalidDimensions, WebpageCurlFailed, MediaEmpty, RPCError) as img_err:
+                # Fallback to text message if photo fails
+                print(f"Warning: Photo send failed. Falling back to text. Error: {img_err}")
+                await message.reply_text(
+                    text=caption,
+                    reply_markup=markup,
+                    disable_web_page_preview=True
+                )
+
+            # Logger
+            if await is_on_off(2):
+                await app.send_message(
+                    chat_id=config.LOGGER_ID,
+                    text=f"✦ {message.from_user.mention} ᴊᴜsᴛ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ.\n\n✦ <b>ᴜsᴇʀ ɪᴅ ➠</b> <code>{message.from_user.id}</code>",
+                )
+
+        except Exception as e:
+            # FULL DEBUGGER: Error kya hai exactly screen par dikhega (Termux/VPS Logs ke liye)
+            error_traceback = traceback.format_exc()
+            print("========== START COMMAND ERROR ==========")
+            print(error_traceback)
+            print("=========================================")
+            
+            try:
+                await message.reply_text(f"<b>❌ Bot Error:</b>\n<code>{e}</code>\n\n_Developer ko Terminal logs check karne boliye._")
+            except:
+                pass
 
 
 @app.on_message(filters.command(["start"]) & filters.group & ~BANNED_USERS)
